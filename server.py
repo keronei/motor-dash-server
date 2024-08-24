@@ -39,6 +39,8 @@ async def disconnect(sid):
 @sio.on('message')
 async def send_gpio_data(message, sid):
     print('Going to send data')
+    global start_time
+    global pulse_count
     try:
         while True:
             elapsed_time = time.time() - start_time
@@ -54,7 +56,7 @@ async def send_gpio_data(message, sid):
             await sio.emit(event='ecuData', data=data)
             print("Data sent, sleeping...")
             
-            await asyncio.sleep(0.5)
+            await asyncio.sleep(0.1)
     except Exception as error:
         print(f'Error in sending data: {error}')
 
