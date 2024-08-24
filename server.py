@@ -1,5 +1,5 @@
 import asyncio
-import json
+import RPi.GPIO as GPIO
 import socketio
 from aiohttp import web
 import time
@@ -14,7 +14,7 @@ def pulse_callback(channel):
     pulse_count += 1
 
 GPIO.setmode(GPIO.BCM)
-GPIO.setup(PULSE_PIN, GPIO.IN, pull_up_down=PUD_DOWN)
+GPIO.setup(PULSE_PIN, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 sio = socketio.AsyncServer(cors_allowed_origins=ALLOWED_ORIGINS)
 
 GPIO.add_event_detect(PULSE_PIN, GPIO.RISING, callback=pulse_callback)
