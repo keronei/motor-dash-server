@@ -48,11 +48,11 @@ async def send_gpio_data(message, sid):
             if elapsed_time >= 1.0:
                 rpm = pulse_count * 60
                 print(f"RPM: {rpm}")
+                start_time = time.time()
+                pulse_count = 0
 
             data = {'speed': 100, 'rpm': rpm}
-            pulse_count = 0
-            start_time = time.time()
-
+            
             await sio.emit(event='ecuData', data=data)
             print("Data sent, sleeping...")
             
