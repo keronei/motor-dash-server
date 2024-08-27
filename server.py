@@ -45,7 +45,7 @@ async def send_gpio_data(message, sid):
         while True:
             elapsed_time = time.time() - start_time
 
-            if elapsed_time >= 1.0:
+            if elapsed_time >= 0.20:
                 rpm = pulse_count * 60
                 print(f"RPM: {rpm}")
                 start_time = time.time()
