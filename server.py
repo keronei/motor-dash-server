@@ -1,10 +1,11 @@
+import os
 import asyncio
 import RPi.GPIO as GPIO
 import socketio
 from aiohttp import web
 import time
 
-ALLOWED_ORIGINS = ["http://localhost:45100"]
+ALLOWED_ORIGINS = ["http://localhost:8090"]
 PULSE_PIN = 17
 pulse_count = 0
 start_time = time.time()
@@ -21,6 +22,13 @@ GPIO.add_event_detect(PULSE_PIN, GPIO.RISING, callback=pulse_callback)
 
 app = web.Application()
 sio.attach(app)
+
+parent_dir = os.path.abspath(os.path.join(os.getcwd(), os.pardir))
+angular_path = os.path.join(parent_dir, 'd3-car-dashboard/dist/d3-car-dashboard/browser')
+app.router.add_static('/', path=angular_path, name='static')
+
+async def handle_root(request):
+    return web.FileResponse(os.path.join(angular_path, 'index.html'))
 
 @sio.event
 async def connect(sid, environ):
