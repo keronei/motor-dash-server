@@ -11,6 +11,7 @@ import serial
 ALLOWED_ORIGINS = ["http://localhost:8090"]
 PULSE_PIN = 17
 pulse_count = 0
+rounded=0
 start_time = time.time()
 
 def pulse_callback(channel):
@@ -52,6 +53,7 @@ async def send_gpio_data(message, sid):
     print('Going to send data')
     global start_time
     global pulse_count
+    global rounded
     try:
         while True:
             port="/dev/ttyS0"
