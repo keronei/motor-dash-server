@@ -2,8 +2,11 @@ import os
 import asyncio
 import RPi.GPIO as GPIO
 import socketio
+import pynmea2
 from aiohttp import web
 import time
+import string
+import serial
 
 ALLOWED_ORIGINS = ["http://localhost:8090"]
 PULSE_PIN = 17
@@ -51,6 +54,16 @@ async def send_gpio_data(message, sid):
     global pulse_count
     try:
         while True:
+            port="/dev/ttyS0"
+            ser=serial.Serial(port=port, baudrate=9600, timeout=0.5)
+            incomingData=ser.readline()
+
+            if incomingData[0:6].decode('utf-8') == "$GPRMC":
+                newdata=pynmea2.parse(incomingData.decode('utf-8'))
+                knots=newdata.spd_over_grnd
+                kmh=knots * 1.852
+                rounded=round(kmh)
+
             elapsed_time = time.time() - start_time
 
             if elapsed_time >= 0.20:
@@ -59,7 +72,7 @@ async def send_gpio_data(message, sid):
                 start_time = time.time()
                 pulse_count = 0
 
-            data = {'speed': 100, 'rpm': rpm}
+            data = {'speed': rounded, 'rpm': rpm}
             
             await sio.emit(event='ecuData', data=data)
             print("Data sent, sleeping...")
@@ -70,6 +83,7 @@ async def send_gpio_data(message, sid):
 
     finally:
         GPIO.cleanup()
+        print("Done, should clean up")
 
 if __name__ == '__main__':
     web.run_app(app=app,host='0.0.0.0', port=8090)
