@@ -54,10 +54,12 @@ async def send_gpio_data(message, sid):
     global start_time
     global pulse_count
     global rounded
+
     try:
+        port="/dev/ttyS0"
+        ser=serial.Serial(port=port, baudrate=9600, timeout=0.5)
+
         while True:
-            port="/dev/ttyS0"
-            ser=serial.Serial(port=port, baudrate=9600, timeout=0.5)
             incomingData=ser.readline()
 
             if incomingData[0:6].decode('utf-8') == "$GPRMC":
@@ -65,6 +67,8 @@ async def send_gpio_data(message, sid):
                 knots=newdata.spd_over_grnd
                 kmh=knots * 1.852
                 rounded=round(kmh)
+            else:
+                print(f"Other: {incomingData[0:6]}")
 
             elapsed_time = time.time() - start_time
 
