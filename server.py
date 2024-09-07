@@ -75,8 +75,9 @@ async def send_gpio_data(message, sid):
             if incomingData[0:6].decode('utf-8') == "$GPRMC":
                 newdata=pynmea2.parse(incomingData.decode('utf-8'))
                 knots=newdata.spd_over_grnd
-                kmh=knots * 1.852
-                rounded=round(kmh)
+                if knots: 
+                    kmh=knots * 1.852
+                    rounded=round(kmh)
             else:
                 print(f"Other: {incomingData[0:6]}")
 
