@@ -7,6 +7,7 @@ from aiohttp import web
 import time
 import string
 import serial
+import logging
 
 ALLOWED_ORIGINS = ["http://localhost:8090"]
 PULSE_PIN = 17
@@ -31,6 +32,14 @@ parent_dir = os.path.abspath(os.path.join(os.getcwd(), os.pardir))
 angular_path = os.path.join(parent_dir, 'd3-car-dashboard/dist/d3-car-dashboard/browser')
 app.router.add_static('/', path=angular_path, name='static')
 
+# Configure logging to write to a file
+logging.basicConfig(
+    filename='/home/project/server_script_errors.log',
+    level=logging.DEBUG,
+    format='%(asctime)s - %(levelname)s - %(message)s'  # Customize log format
+)
+
+
 async def handle_root(request):
     return web.FileResponse(os.path.join(angular_path, 'index.html'))
 
@@ -46,6 +55,7 @@ async def connect(sid, environ):
 
 @sio.event
 async def disconnect(sid):
+    logging.debug(f"Disconnected from {sid} at speed {rounded}km/h")
     print('Disconnected', sid)
 
 @sio.on('message')
@@ -85,6 +95,8 @@ async def send_gpio_data(message, sid):
             await asyncio.sleep(0.1)
     except Exception as error:
         print(f'Error in sending data: {error}')
+        logging.error(f"Error in sending data: {error}")
+        rounded=-5
 
     finally:
         GPIO.cleanup()
