@@ -78,6 +78,8 @@ async def send_gpio_data(message, sid):
                 if knots: 
                     kmh=knots * 1.852
                     rounded=round(kmh)
+                else:
+                    logging.debug(f"Incoming data did not provide speed: {incomingData}")
             else:
                 print(f"Other: {incomingData[0:6]}")
 
