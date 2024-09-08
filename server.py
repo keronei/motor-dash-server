@@ -97,8 +97,9 @@ async def send_gpio_data(message, sid):
             
             await sio.emit(event='ecuData', data=data)
             print(f"Data sent: {data}, sleeping...")
+            ser.reset_input_buffer()
             
-            await asyncio.sleep(0.1)
+            await asyncio.sleep(0.2)
     except Exception as error:
         print(f'Error in sending data: {error}')
         logging.error(f"Error in sending data: {error}")
