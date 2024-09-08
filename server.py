@@ -23,7 +23,7 @@ GPIO.setmode(GPIO.BCM)
 GPIO.setup(PULSE_PIN, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 sio = socketio.AsyncServer(cors_allowed_origins=ALLOWED_ORIGINS)
 
-GPIO.add_event_detect(PULSE_PIN, GPIO.RISING, callback=pulse_callback)
+GPIO.add_event_detect(PULSE_PIN, GPIO.FALLING, callback=pulse_callback)
 
 app = web.Application()
 sio.attach(app)
@@ -71,17 +71,20 @@ async def send_gpio_data(message, sid):
 
         while True:
             incomingData=ser.readline()
-
-            if incomingData[0:6].decode('utf-8') == "$GPRMC":
-                newdata=pynmea2.parse(incomingData.decode('utf-8'))
-                knots=newdata.spd_over_grnd
-                if knots: 
-                    kmh=knots * 1.852
-                    rounded=round(kmh)
+            try:
+                if incomingData[0:6].decode('utf-8') == "$GPRMC":
+                    newdata=pynmea2.parse(incomingData.decode('utf-8'))
+                    knots=newdata.spd_over_grnd
+                    if knots: 
+                        kmh=knots * 1.852
+                        rounded=round(kmh)
+                    else:
+                        logging.debug(f"Incoming data did not provide speed: {knots}")
                 else:
-                    logging.debug(f"Incoming data did not provide speed: {incomingData}")
-            else:
-                print(f"Other: {incomingData[0:6]}")
+                    print(f"Other: {incomingData[0:6]}")
+            except Exception as ep:
+                print(f"Decode error: {ep}")
+                logging.error(f"Decode error: {ep}")
 
             elapsed_time = time.time() - start_time
 
