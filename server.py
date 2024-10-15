@@ -1,29 +1,13 @@
 import os
 import asyncio
-import RPi.GPIO as GPIO
 import socketio
-import pynmea2
 from aiohttp import web
-import time
-import string
 import serial
 import logging
 
 ALLOWED_ORIGINS = ["http://localhost:8090"]
-PULSE_PIN = 17
-pulse_count = 0
-rounded=0
-start_time = time.time()
 
-def pulse_callback(channel):
-    global pulse_count
-    pulse_count += 1
-
-GPIO.setmode(GPIO.BCM)
-GPIO.setup(PULSE_PIN, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 sio = socketio.AsyncServer(cors_allowed_origins=ALLOWED_ORIGINS)
-
-GPIO.add_event_detect(PULSE_PIN, GPIO.FALLING, callback=pulse_callback)
 
 app = web.Application()
 sio.attach(app)
@@ -66,34 +50,18 @@ async def send_gpio_data(message, sid):
     global rounded
 
     try:
-        port="/dev/ttyS0"
+        port="/dev/ttyUSB0"
         ser=serial.Serial(port=port, baudrate=9600, timeout=0.5)
 
         while True:
             incomingData=ser.readline()
             try:
-                if incomingData[0:6].decode('utf-8') == "$GPRMC":
-                    newdata=pynmea2.parse(incomingData.decode('utf-8'))
-                    knots=newdata.spd_over_grnd
-                    if knots: 
-                        kmh=knots * 1.852
-                        rounded=round(kmh)
-                    else:
-                        logging.debug(f"Incoming data did not provide speed: {knots}")
-                else:
-                    print(f"Other: {incomingData[0:6]}")
+               print(incomingData)
             except Exception as ep:
                 print(f"Decode error: {ep}")
                 logging.error(f"Decode error: {ep}")
 
-            elapsed_time = time.time() - start_time
-
-            if elapsed_time >= 0.20:
-                rpm = pulse_count * 60
-                start_time = time.time()
-                pulse_count = 0
-
-            data = {'speed': rounded, 'rpm': rpm}
+            data = {'speed': 0, 'rpm': 90}
             
             await sio.emit(event='ecuData', data=data)
             print(f"Data sent: {data}, sleeping...")
@@ -106,7 +74,6 @@ async def send_gpio_data(message, sid):
         rounded=-5
 
     finally:
-        GPIO.cleanup()
         print("Done, should clean up")
 
 if __name__ == '__main__':
