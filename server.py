@@ -1,6 +1,7 @@
 import os
 import asyncio
 import socketio
+import json
 from aiohttp import web
 import serial
 import logging
@@ -39,7 +40,7 @@ async def connect(sid, environ):
 
 @sio.event
 async def disconnect(sid):
-    logging.debug(f"Disconnected from {sid} at speed {rounded}km/h")
+    logging.debug(f"Disconnected from {sid} at output {data}")
     print('Disconnected', sid)
 
 @sio.on('message')
@@ -47,7 +48,9 @@ async def send_gpio_data(message, sid):
     print('Going to send data')
     global start_time
     global pulse_count
-    global rounded
+    global data
+
+    data = {'speed':0}
 
     try:
         port="/dev/ttyUSB0"
@@ -56,7 +59,9 @@ async def send_gpio_data(message, sid):
         while True:
             incomingData=ser.readline()
             try:
-               print(incomingData)
+                in_data = incomingData.decode('utf-8').strip()
+                if 'speed' in in_data:
+                    data = json.loads(in_data)
             except Exception as ep:
                 print(f"Decode error: {ep}")
                 logging.error(f"Decode error: {ep}")
@@ -67,11 +72,10 @@ async def send_gpio_data(message, sid):
             print(f"Data sent: {data}, sleeping...")
             ser.reset_input_buffer()
             
-            await asyncio.sleep(0.2)
+            await asyncio.sleep(0.1)
     except Exception as error:
         print(f'Error in sending data: {error}')
         logging.error(f"Error in sending data: {error}")
-        rounded=-5
 
     finally:
         print("Done, should clean up")
