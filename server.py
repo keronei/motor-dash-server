@@ -65,8 +65,6 @@ async def send_gpio_data(message, sid):
             except Exception as ep:
                 print(f"Decode error: {ep}")
                 logging.error(f"Decode error: {ep}")
-
-            data = {'speed': 0, 'rpm': 90}
             
             await sio.emit(event='ecuData', data=data)
             print(f"Data sent: {data}, sleeping...")
